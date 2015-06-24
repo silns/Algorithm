@@ -1,0 +1,185 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Node
+{
+  int data;
+  struct Node *lchild;
+  struct Node *rchild;
+  struct Node *parent;
+} Node, *PNode;
+
+void insert(PNode *root, int data)
+{
+  PNode p = (PNode)malloc(sizeof(Node));
+  p->data=data;
+  p->lchild = p->rchild = p->parent = NULL;
+  if((*root) == NULL) {
+    *root = p;
+    return;
+  }
+  if((*root)->lchild == NULL && (*root)->data > data) {
+    p->parent = (*root);
+    (*root)->lchild = p;
+    return;
+  }
+  if((*root)->rchild == NULL && (*root)->data < data) {
+    p->parent = (*root);
+    (*root)->rchild = p;
+    return;
+  }
+  if((*root)->data > data)
+    insert(&(*root)->lchild, data);
+  else if((*root)->data < data)
+    insert(&(*root)->rchild, data);
+  else
+    return;
+}
+
+void create(PNode *root, int *datas, int length)
+{
+  int i;
+  for(i=0; i<length; i++) {
+    insert(root, datas[i]);
+  }
+}
+
+PNode searchMin(PNode root)
+{
+  if(root == NULL)
+    return NULL;
+  if(root->lchild == NULL)
+    return root;
+  else
+    return searchMin(root->lchild);
+}
+
+PNode searchMax(PNode root)
+{
+  if(root == NULL)
+    return NULL;
+  if(root->rchild == NULL)
+    return root;
+  else
+    return searchMax(root->rchild);
+}
+
+PNode search(PNode root, int data)
+{
+  if(root == NULL)
+    return NULL;
+  if(data > root->data)
+    return search(root->rchild, data);
+  else if(data < root->data)
+    return search(root->lchild, data);
+  else
+    return root;
+}
+
+PNode dlrSearchPre(PNode p)
+{
+  if(p->parent == NULL)
+    return NULL;
+  if(p == NULL)
+    return p;
+  if(p->parent->lchild == p)
+    return p->parent;
+  if(p->parent->rchild == p && p->parent->lchild == NULL)
+    return p->parent;
+  if(p->parent->rchild == p && p->parent->lchild) {
+    PNode pre = p->parent->lchild;
+    while(!(!pre->lchild && !pre->rchild)) {
+      if(pre->rchild)
+	pre = pre->rchild;
+      else
+	return pre;
+    }
+    return pre;
+  }
+  return NULL;
+}
+
+PNode dlrSearchNext(PNode p)
+{
+  if(p == NULL)
+    return p;
+  if(p->lchild)
+    return p->lchild;
+  if(!p->lchild && p->rchild)
+    return p->rchild;
+  if(!p->lchild && !p->rchild) {
+    if(p->parent->lchild == p && p->parent->rchild)
+      return p->parent->rchild;
+    if((p->parent->lchild == p && !p->parent->rchild) || p->parent->rchild == p) {
+      while(p->parent && (!p->parent->rchild || p->parent->rchild == p)) {
+	p = p->parent;
+      }
+      if(!p->parent)
+	return NULL;
+      else
+	return p->parent->rchild;
+    }
+  }
+  return NULL;
+}
+
+void dlr(PNode root)
+{
+  if(root == NULL)
+    return;
+  printf("%d\n", root->data);
+  dlr(root->lchild);
+  dlr(root->rchild);
+}
+
+void ldr(PNode root)
+{
+  if(root == NULL)
+    return;
+  ldr(root->lchild);
+  printf("%d\n", root->data);
+  ldr(root->rchild);
+}
+
+void lrd(PNode root)
+{
+  if(root == NULL)
+    return;
+  lrd(root->lchild);
+  lrd(root->rchild);
+  printf("%d\n", root->data);
+}
+
+int main(void)
+{
+  //int datas[] = {2, 1, 3, 9, 6, 10, 4};
+  int datas[]={15, 9, 20, 13, 25, 11, 14, 22, 30, 10, 12, 21, 23, 28, 35, 27, 31, 37, 32};
+  PNode root = NULL;
+  create(&root, datas, sizeof(datas)/sizeof(int));
+  printf("dlr\n");
+  dlr(root);
+  printf("pre && next\n");
+  printf("%d\n", dlrSearchPre(root->lchild)->data);
+  printf("%d\n", dlrSearchPre(root->lchild->rchild)->data);
+  printf("%d\n", dlrSearchPre(root->lchild->rchild->rchild)->data);
+  printf("%d\n", dlrSearchNext(root)->data);
+  printf("%d\n", dlrSearchNext(root->rchild)->data);
+  printf("%d\n", dlrSearchNext(root->rchild->rchild->lchild->lchild)->data);
+  printf("%d\n", dlrSearchNext(root->rchild->rchild->rchild->lchild->lchild)->data);
+  printf("%d\n", dlrSearchNext(root->rchild->rchild->rchild->rchild->lchild->rchild)->data);
+  printf("======\n");
+  if(dlrSearchPre(root) == NULL)
+    printf("root's pre is null\n");
+  if(dlrSearchNext(root->rchild->rchild->rchild->rchild->rchild) == NULL)
+    printf("last one has no next\n");
+  printf("ldr\n");
+  ldr(root);
+  printf("lrd\n");
+  lrd(root);
+  PNode m = searchMin(root);
+  printf("MIN:%d\n", m->data);
+  m = searchMax(root);
+  printf("MAX:%d\n", m->data);
+
+  return 0;
+}
